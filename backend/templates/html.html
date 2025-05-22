@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    
+</head>
+    <script>
+        function startPrediction() {
+            fetch("/last_predict", {  // Notera ny endpoint
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === "success") {
+                    console.log("Typ av accuracy:", typeof data.accuracy);
+
+                    document.getElementById("resultat").innerText = "Accuracy: " + (data.accuracy).toFixed(2);
+                    console.log("Typ av accuracy:", typeof data.time, data.time);
+                    document.getElementById("time").innerText = "Datum: " + data.time.split('T')[0].split('.')[0] + "\n tidpunkt: " + data.time.split('T')[1].split('.')[0];
+                } else {
+                    console.error("Error:", data.message);
+                    alert("Ett fel uppstod: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Ett fel uppstod: " + error.message);
+            });
+        }
+    </script>
+<body>
+    <h1>Senaste prediction accuracy</h1>
+    <ul>
+        {% for result in results %}
+        <li>
+
+            {% if loop.index == 1  %}
+                <strong> Senaste : </strong>
+            {% else %}
+                <strong> Mätning :{{ loop.index}} </strong>
+            {% endif %}   
+                Ticker : {{ result.ticker }} 
+                Accuracy: {{ result.accuracy | round(2)}} | 
+                Tid: {{ result.created_at.strftime("%Y-%m/%d, %H:%M:%S") }}
+            </li>
+        {% endfor %}
+    </ul>
+    <p id="resultat">{{ price }}</p>
+    <h1> tidpunkt</h1>
+    <p id="time">{{ time }}</p>
+    
+    <div>
+
+        <button onclick="startPrediction()">Kör rgegegre</button>
+    </div>
+    <div>
+        <form method="POST" action="/predict">
+            <select name="ticker">
+                <option value="AAPL">Apple</option>
+                <option value="TSLA">Tesla</option>
+            </select>
+        <button type="submit">Kör prediction</button>
+        </form>
+
+    </div>
+</body>
+
+</html>
